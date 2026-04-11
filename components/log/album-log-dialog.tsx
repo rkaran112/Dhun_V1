@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -47,6 +48,7 @@ export function AlbumLogDialog({ album, disabled }: AlbumLogDialogProps) {
   });
   const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const mutation = useMutation({
     mutationFn: async (values: LogFormState) => {
@@ -116,9 +118,16 @@ export function AlbumLogDialog({ album, disabled }: AlbumLogDialogProps) {
 
       return payload;
     },
-    onSuccess: () => {
+    onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: ["recent-logs"] });
       setOpen(false);
+
+      if (created && typeof window !== "undefined") {
+        const albumId = (created as { album_id?: string }).album_id;
+        if (albumId) {
+          router.push(`/logbook?albumId=${encodeURIComponent(albumId)}`);
+        }
+      }
     },
     onError: (err: unknown) => {
       const message =
