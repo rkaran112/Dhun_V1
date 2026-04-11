@@ -47,7 +47,16 @@ function useAuthUser() {
 
     supabase.auth.getUser().then(async ({ data, error }) => {
       if (error) {
-        console.error("Error fetching Supabase user", error.message);
+        // "Auth session missing" is the normal logged-out state when no one is signed in.
+        // Avoid treating it as a hard error in development overlays.
+        const isSessionMissing =
+          (error as any)?.name === "AuthSessionMissingError" ||
+          (error as any)?.message === "Auth session missing!";
+
+        if (!isSessionMissing) {
+          console.error("Error fetching Supabase user", error.message);
+        }
+
         setUser(null);
         setLoading(false);
         return;
