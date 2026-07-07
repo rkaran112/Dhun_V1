@@ -130,12 +130,12 @@ async function deleteLogOnServer(id: string): Promise<void> {
   await supabase.from("logs").delete().eq("id", id).eq("user_id", user.id);
 }
 
-type GroupedLogs = {
+export type GroupedLogs = {
   monthLabel: string;
   logs: DiaryLog[];
 };
 
-function groupLogsByMonth(logs: DiaryLog[]): GroupedLogs[] {
+export function groupLogsByMonth(logs: DiaryLog[]): GroupedLogs[] {
   const formatter = new Intl.DateTimeFormat(undefined, {
     month: "long",
     year: "numeric",
