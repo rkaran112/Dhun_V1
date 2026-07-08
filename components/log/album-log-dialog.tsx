@@ -136,7 +136,7 @@ export function AlbumLogDialog({ album, disabled }: AlbumLogDialogProps) {
     },
   });
 
-  const toggleShelf = (shelf: (typeof shelfEnum.enumValues)[number]) => {
+  const toggleShelf = (shelf: (typeof shelfEnum.options)[number]) => {
     setForm((current) => {
       const exists = current.shelves.includes(shelf);
       if (exists) {
