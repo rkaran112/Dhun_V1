@@ -22,7 +22,6 @@ import { Card } from "@/components/ui/card";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 import { AlbumLogDialog } from "@/components/log/album-log-dialog";
-import { RatingStars } from "@/components/log/rating-stars";
 
 import type { AlbumSearchResult } from "@/lib/spotify/service";
 
