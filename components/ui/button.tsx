@@ -1,5 +1,6 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
+import type * as React from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -49,15 +50,20 @@ function Button({
   className,
   variant = "default",
   size = "default",
-  asChild, // extracted so it isn't passed to the DOM element
+  asChild = false,
+  render,
+  children,
   ...props
 }: ButtonProps) {
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      render={asChild ? (children as React.ReactElement) : render}
       {...props}
-    />
+    >
+      {asChild ? undefined : children}
+    </ButtonPrimitive>
   )
 }
 
