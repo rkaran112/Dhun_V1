@@ -4,6 +4,7 @@ import { ProfileHeader } from "@/components/profile/profile-header";
 import { ProfileLog } from "@/components/profile/logs-grid";
 import { Suspense } from "react";
 import { ShelfFilterWithLogs } from "./shelf-filter-with-logs";
+import { computeStats } from "./utils";
 
 type ProfilePageProps = {
   params: { username: string };
@@ -45,24 +46,6 @@ async function getProfileData(username: string) {
     profile,
     logs: logs as ProfileLog[],
   };
-}
-
-function computeStats(logs: ProfileLog[]) {
-  const totalLogs = logs.length;
-  const averageRating =
-    totalLogs === 0
-      ? null
-      : logs.reduce((sum, log) => sum + log.rating, 0) / totalLogs;
-
-  let listenedCount = 0;
-  let wantToListenCount = 0;
-
-  for (const log of logs) {
-    if (log.shelves.includes("listened")) listenedCount += 1;
-    if (log.shelves.includes("want to listen")) wantToListenCount += 1;
-  }
-
-  return { totalLogs, averageRating, listenedCount, wantToListenCount };
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
