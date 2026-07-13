@@ -296,7 +296,15 @@ async function removeShelfItemOnServer(id: string): Promise<void> {
     if (!raw) return;
     try {
       const parsed = JSON.parse(raw) as ShelfLog[];
-      const next = parsed.filter((entry) => entry.id !== id);
+      const next = parsed.reduce<ShelfLog[]>((acc, entry) => {
+        if (entry.id !== id) {
+          acc.push(entry);
+          return acc;
+        }
+        const shelves = entry.shelves.filter((s) => s !== "want to listen");
+        if (shelves.length > 0) acc.push({ ...entry, shelves });
+        return acc;
+      }, []);
       window.localStorage.setItem("MUSICD_E2E_LOGS", JSON.stringify(next));
     } catch {
       // ignore
@@ -314,7 +322,26 @@ async function removeShelfItemOnServer(id: string): Promise<void> {
 
   if (userError || !user) return;
 
-  await supabase.from("logs").delete().eq("id", id).eq("user_id", user.id);
+  const { data: existing } = await supabase
+    .from("logs")
+    .select("shelves")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+
+  const shelves = (existing?.shelves ?? []).filter(
+    (s: string) => s !== "want to listen",
+  );
+
+  if (shelves.length > 0) {
+    await supabase
+      .from("logs")
+      .update({ shelves })
+      .eq("id", id)
+      .eq("user_id", user.id);
+  } else {
+    await supabase.from("logs").delete().eq("id", id).eq("user_id", user.id);
+  }
 }
 
 function SortableListItem({ item }: { item: RankedListItem }) {
