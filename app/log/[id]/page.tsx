@@ -41,11 +41,12 @@ async function getLogById(id: string) {
 }
 
 type LogDetailPageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export default async function LogDetailPage({ params }: LogDetailPageProps) {
-  const id = decodeURIComponent(params.id);
+  const { id: rawId } = await params;
+  const id = decodeURIComponent(rawId);
   const log = await getLogById(id);
 
   if (!log) {
