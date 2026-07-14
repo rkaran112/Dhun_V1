@@ -7,7 +7,7 @@ import { ShelfFilterWithLogs } from "./shelf-filter-with-logs";
 import { computeStats } from "./utils";
 
 type ProfilePageProps = {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 };
 
 async function getProfileData(username: string) {
@@ -49,7 +49,8 @@ async function getProfileData(username: string) {
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const username = decodeURIComponent(params.username);
+  const { username: rawUsername } = await params;
+  const username = decodeURIComponent(rawUsername);
   const data = await getProfileData(username);
 
   if (!data) {
