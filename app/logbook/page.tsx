@@ -46,7 +46,7 @@ async function fetchLogbookLogs(): Promise<DiaryLog[]> {
   const { data, error } = await supabase
     .from("logs")
     .select(
-      "id, album_id, album_name, artist_name, cover_url, rating, shelves, review_text, created_at",
+      "id, album_id, album_name, artist_name, cover_url, rating, shelves, review_text, created_at, genre",
     )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
@@ -135,6 +135,12 @@ export type GroupedLogs = {
   logs: DiaryLog[];
 };
 
+export function getGenreLabel(log: DiaryLog): string {
+  const primaryGenre = log.genre?.trim();
+  if (primaryGenre && primaryGenre.length > 0) return primaryGenre;
+  return log.shelves.includes("want to listen") ? "Want to listen" : "Listened";
+}
+
 export function groupLogsByMonth(logs: DiaryLog[]): GroupedLogs[] {
   const formatter = new Intl.DateTimeFormat(undefined, {
     month: "long",
@@ -199,15 +205,7 @@ export default function LogbookPage() {
     : logs;
 
   const genreFiltered = genreFilter
-    ? searched.filter((log) => {
-        if (genreFilter === "Listened") {
-          return log.shelves.includes("listened");
-        }
-        if (genreFilter === "Want to listen") {
-          return log.shelves.includes("want to listen");
-        }
-        return true;
-      })
+    ? searched.filter((log) => getGenreLabel(log) === genreFilter)
     : searched;
 
   const grouped = groupLogsByMonth(genreFiltered);

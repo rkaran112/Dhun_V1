@@ -15,6 +15,7 @@ export type DiaryLog = {
   shelves: string[];
   review_text: string | null;
   created_at: string | null;
+  genre?: string | null;
 };
 
 type DiaryEntryProps = {
