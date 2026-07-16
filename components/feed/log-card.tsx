@@ -20,7 +20,7 @@ type LogCardProps = {
   log: FeedLog;
 };
 
-function isNowSpinning(createdAt?: string | null) {
+export function isNowSpinning(createdAt?: string | null) {
   if (!createdAt) return false;
   const created = new Date(createdAt).getTime();
   if (Number.isNaN(created)) return false;
