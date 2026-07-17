@@ -94,8 +94,7 @@ async function fetchDiagnostics(): Promise<DiagnosticsPayload> {
   }));
 
   const now = new Date();
-  const twelveMonthsAgo = new Date(now);
-  twelveMonthsAgo.setMonth(now.getMonth() - 11);
+  const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
 
   type TimelineBucket = { key: string; label: string; count: number };
 
@@ -106,8 +105,11 @@ async function fetchDiagnostics(): Promise<DiagnosticsPayload> {
   const timelineBuckets: TimelineBucket[] = [];
 
   for (let i = 0; i < 12; i += 1) {
-    const date = new Date(twelveMonthsAgo);
-    date.setMonth(twelveMonthsAgo.getMonth() + i);
+    const date = new Date(
+      twelveMonthsAgo.getFullYear(),
+      twelveMonthsAgo.getMonth() + i,
+      1,
+    );
     const key = `${date.getFullYear()}-${date.getMonth()}`;
     const label = formatter.format(date).slice(0, 3);
     timelineBuckets.push({ key, label, count: 0 });
