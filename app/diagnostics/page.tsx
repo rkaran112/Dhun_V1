@@ -15,6 +15,49 @@ export type DiagnosticsPayload = {
   timelinePoints: { label: string; count: number }[];
 };
 
+type TimelineLog = { created_at: string | null };
+
+export function buildTimelineBuckets(
+  logs: TimelineLog[],
+  now: Date = new Date(),
+): { label: string; count: number }[] {
+  const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+  type TimelineBucket = { key: string; label: string; count: number };
+
+  const formatter = new Intl.DateTimeFormat(undefined, {
+    month: "short",
+  });
+
+  const timelineBuckets: TimelineBucket[] = [];
+
+  for (let i = 0; i < 12; i += 1) {
+    const date = new Date(
+      twelveMonthsAgo.getFullYear(),
+      twelveMonthsAgo.getMonth() + i,
+      1,
+    );
+    const key = `${date.getFullYear()}-${date.getMonth()}`;
+    const label = formatter.format(date).slice(0, 3);
+    timelineBuckets.push({ key, label, count: 0 });
+  }
+
+  for (const log of logs) {
+    if (!log.created_at) continue;
+    const created = new Date(log.created_at);
+    if (Number.isNaN(created.getTime())) continue;
+    if (created < twelveMonthsAgo || created > now) continue;
+
+    const key = `${created.getFullYear()}-${created.getMonth()}`;
+    const bucket = timelineBuckets.find((b) => b.key === key);
+    if (bucket) {
+      bucket.count += 1;
+    }
+  }
+
+  return timelineBuckets.map(({ label, count }) => ({ label, count }));
+}
+
 async function fetchDiagnostics(): Promise<DiagnosticsPayload> {
   const isBrowser = typeof window !== "undefined";
   const isTestMode =
@@ -93,45 +136,7 @@ async function fetchDiagnostics(): Promise<DiagnosticsPayload> {
     count,
   }));
 
-  const now = new Date();
-  const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
-
-  type TimelineBucket = { key: string; label: string; count: number };
-
-  const formatter = new Intl.DateTimeFormat(undefined, {
-    month: "short",
-  });
-
-  const timelineBuckets: TimelineBucket[] = [];
-
-  for (let i = 0; i < 12; i += 1) {
-    const date = new Date(
-      twelveMonthsAgo.getFullYear(),
-      twelveMonthsAgo.getMonth() + i,
-      1,
-    );
-    const key = `${date.getFullYear()}-${date.getMonth()}`;
-    const label = formatter.format(date).slice(0, 3);
-    timelineBuckets.push({ key, label, count: 0 });
-  }
-
-  for (const log of logs) {
-    if (!log.created_at) continue;
-    const created = new Date(log.created_at);
-    if (Number.isNaN(created.getTime())) continue;
-    if (created < twelveMonthsAgo || created > now) continue;
-
-    const key = `${created.getFullYear()}-${created.getMonth()}`;
-    const bucket = timelineBuckets.find((b) => b.key === key);
-    if (bucket) {
-      bucket.count += 1;
-    }
-  }
-
-  const timelinePoints = timelineBuckets.map(({ label, count }) => ({
-    label,
-    count,
-  }));
+  const timelinePoints = buildTimelineBuckets(logs);
 
   return {
     ratingBuckets,
