@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { parseApiErrorMessage } from "@/lib/http";
 
 import { AlbumLogDialog } from "@/components/log/album-log-dialog";
 
@@ -458,7 +459,7 @@ function RankedListCard({ list }: { list: RankedList }) {
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || "Search failed");
+        throw new Error(parseApiErrorMessage(text, "Search failed"));
       }
 
       const json = (await response.json()) as { albums: AlbumSearchResult[] };
