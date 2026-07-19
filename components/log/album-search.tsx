@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { AlbumLogDialog } from "@/components/log/album-log-dialog";
+import { parseApiErrorMessage } from "@/lib/http";
 
 type AlbumSearchProps = {
   isAuthenticated: boolean;
@@ -40,7 +41,7 @@ export function AlbumSearch({ isAuthenticated }: AlbumSearchProps) {
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || "Search failed");
+        throw new Error(parseApiErrorMessage(text, "Search failed"));
       }
 
       const json = (await response.json()) as {
