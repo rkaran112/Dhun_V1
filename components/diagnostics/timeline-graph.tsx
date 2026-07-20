@@ -7,6 +7,29 @@ type TimelineGraphProps = {
   points: TimelinePoint[];
 };
 
+const GRAPH_HEIGHT = 8;
+
+export function buildTimelineGrid(
+  points: TimelinePoint[],
+  height: number = GRAPH_HEIGHT,
+): string[][] {
+  const max = Math.max(...points.map((p) => p.count));
+
+  const grid: string[][] = Array.from({ length: height }, () =>
+    Array(points.length).fill(" "),
+  );
+
+  points.forEach((point, x) => {
+    if (point.count === 0) return;
+    const normalized = max === 0 ? 0 : Math.round((point.count / max) * (height - 1));
+    for (let y = height - 1; y >= height - 1 - normalized; y -= 1) {
+      grid[y][x] = "#";
+    }
+  });
+
+  return grid;
+}
+
 export function TimelineGraph({ points }: TimelineGraphProps) {
   if (points.length === 0) {
     return (
@@ -16,19 +39,7 @@ export function TimelineGraph({ points }: TimelineGraphProps) {
     );
   }
 
-  const max = Math.max(...points.map((p) => p.count));
-  const height = 8;
-
-  const grid: string[][] = Array.from({ length: height }, () =>
-    Array(points.length).fill(" "),
-  );
-
-  points.forEach((point, x) => {
-    const normalized = max === 0 ? 0 : Math.round((point.count / max) * (height - 1));
-    for (let y = height - 1; y >= height - 1 - normalized; y -= 1) {
-      grid[y][x] = "#";
-    }
-  });
+  const grid = buildTimelineGrid(points);
 
   return (
     <pre className="rounded-md bg-muted p-3 text-[11px] font-mono leading-relaxed text-foreground">
