@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { searchAlbums } from "@/lib/spotify/service";
+import { describeSearchError } from "@/lib/spotify/search-error";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,8 +10,7 @@ export async function GET(request: Request) {
     const albums = await searchAlbums(query);
     return NextResponse.json({ albums });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to search Spotify.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    const { message, status } = describeSearchError(error);
+    return NextResponse.json({ error: message }, { status });
   }
 }
