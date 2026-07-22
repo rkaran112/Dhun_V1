@@ -186,15 +186,15 @@ async function reorderListItemsOnServer(payload: {
   const supabase = getSupabaseClient();
   if (!supabase) return;
 
-  const updates = payload.orderedIds.map((id, index) => ({
-    id,
-    list_id: payload.listId,
-    rank: index + 1,
-  }));
-
-  await supabase
-    .from("ranked_list_items")
-    .upsert(updates, { onConflict: "id" });
+  await Promise.all(
+    payload.orderedIds.map((id, index) =>
+      supabase
+        .from("ranked_list_items")
+        .update({ rank: index + 1 })
+        .eq("id", id)
+        .eq("list_id", payload.listId),
+    ),
+  );
 }
 
 async function fetchShelfLogs(): Promise<ShelfLog[]> {
