@@ -22,8 +22,6 @@ import { Card } from "@/components/ui/card";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { parseApiErrorMessage } from "@/lib/http";
 
-import { AlbumLogDialog } from "@/components/log/album-log-dialog";
-
 import type { AlbumSearchResult } from "@/lib/spotify/service";
 
 type RankedListItem = {
@@ -790,19 +788,6 @@ export default function ArchivesPage() {
           )}
         </TabsContent>
       </Tabs>
-
-      <section className="hidden">
-        {/* Placeholder to ensure AlbumLogDialog tree-shakes correctly when unused here */}
-        <AlbumLogDialog
-          album={{
-            id: "placeholder",
-            album_name: "",
-            artist_name: "",
-            cover_url: null,
-          }}
-          disabled
-        />
-      </section>
     </div>
   );
 }
