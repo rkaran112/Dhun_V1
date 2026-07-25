@@ -1,3 +1,15 @@
+import { ZodError } from "zod";
+
+export function describeMutationError(err: unknown, fallback: string): string {
+  if (err instanceof ZodError) {
+    return err.issues[0]?.message ?? fallback;
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  return fallback;
+}
+
 export function parseApiErrorMessage(text: string, fallback: string): string {
   if (!text) return fallback;
 

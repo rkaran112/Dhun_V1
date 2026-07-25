@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { describeMutationError } from "@/lib/http";
 import {
   Dialog,
   DialogContent,
@@ -130,9 +131,7 @@ export function AlbumLogDialog({ album, disabled }: AlbumLogDialogProps) {
       }
     },
     onError: (err: unknown) => {
-      const message =
-        err instanceof Error ? err.message : "Failed to save log. Please try again.";
-      setError(message);
+      setError(describeMutationError(err, "Failed to save log. Please try again."));
     },
   });
 
