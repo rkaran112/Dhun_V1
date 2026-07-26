@@ -321,12 +321,14 @@ async function removeShelfItemOnServer(id: string): Promise<void> {
 
   if (userError || !user) return;
 
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from("logs")
     .select("shelves")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
+
+  if (existingError) return;
 
   const shelves = (existing?.shelves ?? []).filter(
     (s: string) => s !== "want to listen",
