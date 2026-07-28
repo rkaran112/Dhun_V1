@@ -55,6 +55,14 @@ export function DiaryEntry({
     setIsEditing(false);
   };
 
+  const handleToggleEdit = () => {
+    if (isEditing) {
+      setDraftRating(log.rating);
+      setDraftReview(log.review_text ?? "");
+    }
+    setIsEditing((prev) => !prev);
+  };
+
   const handleDelete = () => {
     if (window.confirm("Delete this entry? This cannot be undone.")) {
       onDelete();
@@ -99,7 +107,7 @@ export function DiaryEntry({
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => setIsEditing((prev) => !prev)}
+                onClick={handleToggleEdit}
                 className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-transparent bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
                 aria-label={isEditing ? "Cancel edit" : "Edit entry"}
               >
@@ -144,11 +152,7 @@ export function DiaryEntry({
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={() => {
-                  setIsEditing(false);
-                  setDraftRating(log.rating);
-                  setDraftReview(log.review_text ?? "");
-                }}
+                onClick={handleToggleEdit}
               >
                 Cancel
               </Button>
