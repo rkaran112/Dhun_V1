@@ -345,6 +345,22 @@ async function removeShelfItemOnServer(id: string): Promise<void> {
   }
 }
 
+export function reorderItems(
+  items: RankedListItem[],
+  activeId: string,
+  overId: string,
+): RankedListItem[] {
+  const oldIndex = items.findIndex((item) => item.id === activeId);
+  const newIndex = items.findIndex((item) => item.id === overId);
+  if (oldIndex === -1 || newIndex === -1) return items;
+
+  const reordered = items.slice();
+  const [moved] = reordered.splice(oldIndex, 1);
+  reordered.splice(newIndex, 0, moved);
+
+  return reordered.map((item, index) => ({ ...item, rank: index + 1 }));
+}
+
 function SortableListItem({ item }: { item: RankedListItem }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: item.id,
@@ -418,18 +434,8 @@ function RankedListCard({ list }: { list: RankedList }) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = items.findIndex((item) => item.id === active.id);
-    const newIndex = items.findIndex((item) => item.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const reordered = items.slice();
-    const [moved] = reordered.splice(oldIndex, 1);
-    reordered.splice(newIndex, 0, moved);
-
-    const withRanks = reordered.map((item, index) => ({
-      ...item,
-      rank: index + 1,
-    }));
+    const withRanks = reorderItems(items, String(active.id), String(over.id));
+    if (withRanks === items) return;
 
     queryClient.setQueryData<RankedList[]>(["ranked-lists"], (current) => {
       if (!current) return current;
