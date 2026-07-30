@@ -4,6 +4,7 @@ import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { describeMutationError } from "@/lib/http";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MonthDivider } from "@/components/logbook/month-divider";
@@ -92,11 +93,15 @@ async function updateLogOnServer(
 
   if (userError || !user) return;
 
-  await supabase
+  const { error } = await supabase
     .from("logs")
     .update({ rating: payload.rating, review_text: payload.review_text })
     .eq("id", payload.id)
     .eq("user_id", user.id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 async function deleteLogOnServer(id: string): Promise<void> {
@@ -127,7 +132,15 @@ async function deleteLogOnServer(id: string): Promise<void> {
 
   if (userError || !user) return;
 
-  await supabase.from("logs").delete().eq("id", id).eq("user_id", user.id);
+  const { error } = await supabase
+    .from("logs")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 export type GroupedLogs = {
@@ -170,6 +183,7 @@ export default function LogbookPage() {
   const genreFilter = searchParams.get("genre");
   const queryClient = useQueryClient();
   const highlightRef = React.useRef<HTMLDivElement | null>(null);
+  const [actionError, setActionError] = React.useState<string | null>(null);
 
   const { data, isLoading } = useQuery<DiaryLog[]>({
     queryKey: ["logbook-logs"],
@@ -181,14 +195,22 @@ export default function LogbookPage() {
   const updateMutation = useMutation({
     mutationFn: updateLogOnServer,
     onSuccess: () => {
+      setActionError(null);
       queryClient.invalidateQueries({ queryKey: ["logbook-logs"] });
+    },
+    onError: (err: unknown) => {
+      setActionError(describeMutationError(err, "Failed to save your changes. Please try again."));
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteLogOnServer,
     onSuccess: () => {
+      setActionError(null);
       queryClient.invalidateQueries({ queryKey: ["logbook-logs"] });
+    },
+    onError: (err: unknown) => {
+      setActionError(describeMutationError(err, "Failed to delete this entry. Please try again."));
     },
   });
 
@@ -250,6 +272,12 @@ export default function LogbookPage() {
           ) : null}
         </form>
       </header>
+
+      {actionError ? (
+        <p className="text-sm text-destructive" role="alert">
+          {actionError}
+        </p>
+      ) : null}
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading your logbook…</p>
