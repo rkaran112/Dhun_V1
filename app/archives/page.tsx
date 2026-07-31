@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { parseApiErrorMessage } from "@/lib/http";
+import { describeMutationError, parseApiErrorMessage } from "@/lib/http";
 
 import type { AlbumSearchResult } from "@/lib/spotify/service";
 
@@ -278,11 +278,15 @@ async function logShelfItemOnServer(log: ShelfLog): Promise<void> {
     ]),
   );
 
-  await supabase
+  const { error } = await supabase
     .from("logs")
     .update({ shelves })
     .eq("id", log.id)
     .eq("user_id", user.id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 async function removeShelfItemOnServer(id: string): Promise<void> {
@@ -335,13 +339,25 @@ async function removeShelfItemOnServer(id: string): Promise<void> {
   );
 
   if (shelves.length > 0) {
-    await supabase
+    const { error } = await supabase
       .from("logs")
       .update({ shelves })
       .eq("id", id)
       .eq("user_id", user.id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
   } else {
-    await supabase.from("logs").delete().eq("id", id).eq("user_id", user.id);
+    const { error } = await supabase
+      .from("logs")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
   }
 }
 
@@ -673,6 +689,7 @@ export default function ArchivesPage() {
   const queryClient = useQueryClient();
   const [listName, setListName] = React.useState("");
   const [listDescription, setListDescription] = React.useState("");
+  const [shelfError, setShelfError] = React.useState<string | null>(null);
 
   const {
     data: lists,
@@ -706,15 +723,23 @@ export default function ArchivesPage() {
   const logMutation = useMutation({
     mutationFn: logShelfItemOnServer,
     onSuccess: () => {
+      setShelfError(null);
       queryClient.invalidateQueries({ queryKey: ["shelf-logs"] });
       queryClient.invalidateQueries({ queryKey: ["logbook-logs"] });
+    },
+    onError: (err: unknown) => {
+      setShelfError(describeMutationError(err, "Failed to log this item. Please try again."));
     },
   });
 
   const removeMutation = useMutation({
     mutationFn: removeShelfItemOnServer,
     onSuccess: () => {
+      setShelfError(null);
       queryClient.invalidateQueries({ queryKey: ["shelf-logs"] });
+    },
+    onError: (err: unknown) => {
+      setShelfError(describeMutationError(err, "Failed to remove this item. Please try again."));
     },
   });
 
@@ -784,6 +809,11 @@ export default function ArchivesPage() {
         </TabsContent>
 
         <TabsContent value="shelf" className="space-y-4">
+          {shelfError ? (
+            <p className="text-sm text-destructive" role="alert">
+              {shelfError}
+            </p>
+          ) : null}
           {shelfLoading ? (
             <p className="text-sm text-muted-foreground">Loading your shelf…</p>
           ) : (
