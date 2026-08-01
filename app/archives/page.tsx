@@ -184,7 +184,7 @@ async function reorderListItemsOnServer(payload: {
   const supabase = getSupabaseClient();
   if (!supabase) return;
 
-  await Promise.all(
+  const results = await Promise.all(
     payload.orderedIds.map((id, index) =>
       supabase
         .from("ranked_list_items")
@@ -193,6 +193,11 @@ async function reorderListItemsOnServer(payload: {
         .eq("list_id", payload.listId),
     ),
   );
+
+  const failed = results.find((result) => result.error);
+  if (failed?.error) {
+    throw new Error(failed.error.message);
+  }
 }
 
 async function fetchShelfLogs(): Promise<ShelfLog[]> {
