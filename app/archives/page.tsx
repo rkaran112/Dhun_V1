@@ -433,9 +433,15 @@ function RankedListCard({ list }: { list: RankedList }) {
   const [searchResults, setSearchResults] = React.useState<AlbumSearchResult[]>([]);
   const [searchError, setSearchError] = React.useState<string | null>(null);
   const [isSearching, setIsSearching] = React.useState(false);
+  const [listError, setListError] = React.useState<string | null>(null);
 
   const reorderMutation = useMutation({
     mutationFn: reorderListItemsOnServer,
+    onError: (err: unknown) => {
+      setListError(
+        describeMutationError(err, "Failed to save the new order. Please try again."),
+      );
+    },
   });
 
   const sensors = useSensors(
@@ -512,6 +518,9 @@ function RankedListCard({ list }: { list: RankedList }) {
             : existing,
         );
       });
+    },
+    onError: (err: unknown) => {
+      setListError(describeMutationError(err, "Failed to add this album. Please try again."));
     },
   });
 
@@ -591,6 +600,12 @@ function RankedListCard({ list }: { list: RankedList }) {
           </div>
         ) : null}
       </div>
+
+      {listError ? (
+        <p className="text-xs text-destructive" role="alert">
+          {listError}
+        </p>
+      ) : null}
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <SortableContext
