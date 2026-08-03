@@ -58,6 +58,49 @@ export function buildTimelineBuckets(
   return timelineBuckets.map(({ label, count }) => ({ label, count }));
 }
 
+type RatingLog = { rating: number };
+
+export function buildRatingBuckets(
+  logs: RatingLog[],
+): { rating: number; count: number }[] {
+  const ratingBucketsMap = new Map<number, number>();
+
+  for (const log of logs) {
+    const step = Math.round(log.rating * 2) / 2;
+    const current = ratingBucketsMap.get(step) ?? 0;
+    ratingBucketsMap.set(step, current + 1);
+  }
+
+  return Array.from(ratingBucketsMap.entries())
+    .map(([rating, count]) => ({ rating, count }))
+    .sort((a, b) => a.rating - b.rating);
+}
+
+type GenreLog = { genre?: string | null; shelves: string[] };
+
+export function buildGenreSlices(
+  logs: GenreLog[],
+): { label: string; count: number }[] {
+  const genreMap = new Map<string, number>();
+
+  for (const log of logs) {
+    const primaryGenre = log.genre?.trim();
+    const label =
+      primaryGenre && primaryGenre.length > 0
+        ? primaryGenre
+        : log.shelves.includes("want to listen")
+          ? "Want to listen"
+          : "Listened";
+    const current = genreMap.get(label) ?? 0;
+    genreMap.set(label, current + 1);
+  }
+
+  return Array.from(genreMap.entries()).map(([label, count]) => ({
+    label,
+    count,
+  }));
+}
+
 async function fetchDiagnostics(): Promise<DiagnosticsPayload> {
   const isBrowser = typeof window !== "undefined";
   const isTestMode =
@@ -105,37 +148,8 @@ async function fetchDiagnostics(): Promise<DiagnosticsPayload> {
     }
   }
 
-  const ratingBucketsMap = new Map<number, number>();
-
-  for (const log of logs) {
-    const step = Math.round(log.rating * 2) / 2;
-    const current = ratingBucketsMap.get(step) ?? 0;
-    ratingBucketsMap.set(step, current + 1);
-  }
-
-  const ratingBuckets = Array.from(ratingBucketsMap.entries())
-    .map(([rating, count]) => ({ rating, count }))
-    .sort((a, b) => a.rating - b.rating);
-
-  const genreMap = new Map<string, number>();
-
-  for (const log of logs) {
-    const primaryGenre = log.genre?.trim();
-    const label =
-      primaryGenre && primaryGenre.length > 0
-        ? primaryGenre
-        : log.shelves.includes("want to listen")
-          ? "Want to listen"
-          : "Listened";
-    const current = genreMap.get(label) ?? 0;
-    genreMap.set(label, current + 1);
-  }
-
-  const genreSlices = Array.from(genreMap.entries()).map(([label, count]) => ({
-    label,
-    count,
-  }));
-
+  const ratingBuckets = buildRatingBuckets(logs);
+  const genreSlices = buildGenreSlices(logs);
   const timelinePoints = buildTimelineBuckets(logs);
 
   return {
