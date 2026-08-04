@@ -138,7 +138,8 @@ async function createListOnServer(payload: {
     .select("id, name, description, created_at")
     .single();
 
-  if (error || !data) return null;
+  if (error) throw new Error(error.message);
+  if (!data) return null;
 
   return {
     id: data.id as string,
@@ -172,7 +173,8 @@ async function addListItemOnServer(payload: {
     )
     .single();
 
-  if (error || !data) return null;
+  if (error) throw new Error(error.message);
+  if (!data) return null;
 
   return data as RankedListItem;
 }
@@ -710,6 +712,7 @@ export default function ArchivesPage() {
   const [listName, setListName] = React.useState("");
   const [listDescription, setListDescription] = React.useState("");
   const [shelfError, setShelfError] = React.useState<string | null>(null);
+  const [createListError, setCreateListError] = React.useState<string | null>(null);
 
   const {
     data: lists,
@@ -731,12 +734,16 @@ export default function ArchivesPage() {
     mutationFn: createListOnServer,
     onSuccess: (created) => {
       if (!created) return;
+      setCreateListError(null);
       queryClient.setQueryData<RankedList[]>(["ranked-lists"], (current) => {
         if (!current) return [created];
         return [created, ...current];
       });
       setListName("");
       setListDescription("");
+    },
+    onError: (err: unknown) => {
+      setCreateListError(describeMutationError(err, "Failed to create this list. Please try again."));
     },
   });
 
@@ -811,6 +818,11 @@ export default function ArchivesPage() {
                 {createListMutation.isPending ? "Creating…" : "Create list"}
               </Button>
             </form>
+            {createListError ? (
+              <p className="mt-2 text-xs text-destructive" role="alert">
+                {createListError}
+              </p>
+            ) : null}
           </Card>
 
           {listsLoading ? (
