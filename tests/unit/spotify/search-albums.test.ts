@@ -134,4 +134,34 @@ describe("searchAlbums", () => {
 
     await expect(searchAlbums("daft punk")).resolves.toEqual([]);
   });
+
+  it("reuses the cached access token for a subsequent search instead of re-authenticating", async () => {
+    let tokenCalls = 0;
+    let searchCalls = 0;
+    global.fetch = jest.fn((input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+      if (url.includes("accounts.spotify.com")) {
+        tokenCalls += 1;
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ access_token: "token-1", expires_in: 3600 }),
+          text: () => Promise.resolve(""),
+        }) as unknown as Promise<Response>;
+      }
+      searchCalls += 1;
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ albums: { items: [] } }),
+        text: () => Promise.resolve(""),
+      }) as unknown as Promise<Response>;
+    }) as unknown as typeof fetch;
+
+    const { searchAlbums } = await import("@/lib/spotify/service");
+
+    await searchAlbums("daft punk");
+    await searchAlbums("daft punk");
+
+    expect(tokenCalls).toBe(1);
+    expect(searchCalls).toBe(2);
+  });
 });
