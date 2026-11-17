@@ -64,6 +64,6 @@ The app is more built-out than a typical scaffold — most core screens (search,
 - Several data paths have an "E2E test mode" branch (checking `localStorage` for `MUSICD_E2E_TEST_USER`/`MUSICD_E2E_LOGS`) alongside the real Supabase path, which is useful for tests but adds branching that should eventually be isolated from production code.
 - `components/log/album-search.tsx` has its own inline test-mode stub result, separate from the shared search flow — minor duplication.
 - Server-side Supabase client (`lib/supabase/server.ts`) falls back to the anon key if `SUPABASE_SERVICE_ROLE_KEY` isn't set, which is a workable dev fallback but should not be relied on for anything requiring elevated privileges.
-- No CI configuration was found in the repo (no `.github/workflows`), so lint/test/build are not automatically enforced.
+- CI (`.github/workflows/ci.yml`) runs lint, type-check, unit tests and a production build on pushes to `main` and on pull requests. The Playwright e2e suite is not run in CI yet.
 
 In short: the frontend and API-route logic for the core features are implemented, but the project is missing the database schema and environment documentation needed to actually stand it up from a fresh clone.
