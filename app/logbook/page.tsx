@@ -176,7 +176,7 @@ export function groupLogsByMonth(logs: DiaryLog[]): GroupedLogs[] {
   }));
 }
 
-export default function LogbookPage() {
+function LogbookContent() {
   const searchParams = useSearchParams();
   const [search, setSearch] = React.useState("");
   const highlightedAlbumId = searchParams.get("albumId");
@@ -321,5 +321,23 @@ export default function LogbookPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function LogbookFallback() {
+  return (
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6">
+      <p className="text-sm text-muted-foreground">Loading your logbook…</p>
+    </div>
+  );
+}
+
+// useSearchParams() opts the subtree into client-side rendering, so it must sit
+// under a Suspense boundary or the static prerender of /logbook fails the build.
+export default function LogbookPage() {
+  return (
+    <React.Suspense fallback={<LogbookFallback />}>
+      <LogbookContent />
+    </React.Suspense>
   );
 }
