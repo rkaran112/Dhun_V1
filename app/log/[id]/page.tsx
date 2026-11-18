@@ -3,6 +3,7 @@ import { getServerSupabaseClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 import { RatingStars } from "@/components/log/rating-stars";
 import Link from "next/link";
+import { normalizeLogDetail } from "./utils";
 
 async function getLogById(id: string) {
   const supabase = getServerSupabaseClient();
@@ -22,22 +23,7 @@ async function getLogById(id: string) {
     .eq("id", data.user_id)
     .maybeSingle();
 
-  return {
-    ...data,
-    username: profile?.username ?? null,
-  } as {
-    id: string;
-    album_id: string;
-    album_name: string;
-    artist_name: string;
-    cover_url: string | null;
-    rating: number;
-    shelves: string[];
-    review_text: string | null;
-    user_id: string;
-    created_at: string | null;
-    username: string | null;
-  };
+  return normalizeLogDetail(data, profile?.username ?? null);
 }
 
 type LogDetailPageProps = {
@@ -117,9 +103,11 @@ export default async function LogDetailPage({ params }: LogDetailPageProps) {
                 ? log.review_text
                 : "No written review for this log."}
             </p>
-            <p className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
-              Shelves: {log.shelves.join(", ")}
-            </p>
+            {log.shelves.length > 0 ? (
+              <p className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+                Shelves: {log.shelves.join(", ")}
+              </p>
+            ) : null}
           </div>
         </div>
       </Card>
