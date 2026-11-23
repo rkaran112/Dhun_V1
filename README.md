@@ -31,16 +31,13 @@ Dhun (internally referred to as "Musicd" in the UI) lets users search Spotify fo
    ```bash
    npm install
    ```
-2. Configure environment variables (read from `lib/spotify/service.ts` and `lib/supabase/*`; no `.env.example` is checked in, so create a `.env.local` yourself):
-   ```
-   SPOTIFY_CLIENT_ID=
-   SPOTIFY_CLIENT_SECRET=
-   NEXT_PUBLIC_SUPABASE_URL=
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=
-   SUPABASE_SERVICE_ROLE_KEY=
+2. Configure environment variables by copying the template and filling it in:
+   ```bash
+   cp .env.example .env.local
    ```
    Without these, the app still renders but Supabase-backed features return empty/no-op results and Spotify search will fail with a clear error message.
-3. Run the dev server:
+3. Create the database schema in your Supabase project. The tables, indexes and row-level-security policies live in `supabase/migrations/0001_initial_schema.sql`; apply it with `supabase db push` (Supabase CLI) or paste it into the SQL editor.
+4. Run the dev server:
    ```bash
    npm run dev
    ```
@@ -59,11 +56,11 @@ npm run test:e2e  # playwright e2e tests
 
 The app is more built-out than a typical scaffold — most core screens (search, logging, feed, ranked lists, shelves, diagnostics, profile) have real implementations with Supabase queries, loading/error states, and unit + e2e tests. That said, it is not production-ready:
 
-- **No database schema/migrations in the repo.** Code references Supabase tables (`profiles`, `logs`, `follows`, `ranked_lists`, `ranked_list_items`) and columns (e.g. `shelves`, `genre`) that must exist for any of this to work, but there is no SQL/migration file defining them anywhere in the repo — the schema is implicit and undocumented.
-- **No `.env.example`** — required environment variables have to be inferred from source.
+- The `logs.genre` column exists in the schema and is read by Diagnostics, but nothing populates it yet, so the genre chart stays empty.
+- There is no UI to follow/unfollow users yet, so the Mainframe "following" feed can only be populated by inserting `follows` rows directly.
 - Several data paths have an "E2E test mode" branch (checking `localStorage` for `MUSICD_E2E_TEST_USER`/`MUSICD_E2E_LOGS`) alongside the real Supabase path, which is useful for tests but adds branching that should eventually be isolated from production code.
 - `components/log/album-search.tsx` has its own inline test-mode stub result, separate from the shared search flow — minor duplication.
 - Server-side Supabase client (`lib/supabase/server.ts`) falls back to the anon key if `SUPABASE_SERVICE_ROLE_KEY` isn't set, which is a workable dev fallback but should not be relied on for anything requiring elevated privileges.
 - No CI configuration was found in the repo (no `.github/workflows`), so lint/test/build are not automatically enforced.
 
-In short: the frontend and API-route logic for the core features are implemented, but the project is missing the database schema and environment documentation needed to actually stand it up from a fresh clone.
+In short: the frontend and API-route logic for the core features are implemented, and the schema plus `.env.example` make it possible to stand up from a fresh clone; the remaining gaps are follow UI, genre data, and CI.
