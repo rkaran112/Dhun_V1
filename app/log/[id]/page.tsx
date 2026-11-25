@@ -117,9 +117,11 @@ export default async function LogDetailPage({ params }: LogDetailPageProps) {
                 ? log.review_text
                 : "No written review for this log."}
             </p>
-            <p className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
-              Shelves: {log.shelves.join(", ")}
-            </p>
+            {log.shelves && log.shelves.length > 0 ? (
+              <p className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+                Shelves: {log.shelves.join(", ")}
+              </p>
+            ) : null}
           </div>
         </div>
       </Card>
