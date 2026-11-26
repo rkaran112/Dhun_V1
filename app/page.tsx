@@ -6,6 +6,7 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { AlbumSearch } from "@/components/log/album-search";
 import { RecentLogs } from "@/components/log/recent-logs";
+import { signOutUser } from "@/lib/auth/sign-out";
 
 type SessionUser = {
   id: string;
@@ -116,7 +117,7 @@ function useAuthUser() {
     });
   }, [testUser]);
 
-  return { user, loading } as const;
+  return { user, setUser, loading } as const;
 }
 
 async function signInWithSpotify() {
@@ -146,7 +147,21 @@ async function signInWithSpotify() {
 }
 
 export default function HomePage() {
-  const { user, loading } = useAuthUser();
+  const { user, setUser, loading } = useAuthUser();
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    setSignOutError(null);
+    const result = await signOutUser(getSupabaseClient());
+    setSigningOut(false);
+    if (result.ok) {
+      setUser(null);
+    } else {
+      setSignOutError(result.error);
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -171,6 +186,19 @@ export default function HomePage() {
                   <Button asChild size="sm" variant="outline">
                     <Link href={`/${user.username}`}>View profile</Link>
                   </Button>
+                ) : null}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                >
+                  {signingOut ? "Signing out…" : "Sign out"}
+                </Button>
+                {signOutError ? (
+                  <span role="alert" className="text-xs text-destructive">
+                    {signOutError}
+                  </span>
                 ) : null}
               </div>
             ) : (
