@@ -31,7 +31,7 @@ Dhun (internally referred to as "Musicd" in the UI) lets users search Spotify fo
    ```bash
    npm install
    ```
-2. Configure environment variables (read from `lib/spotify/service.ts` and `lib/supabase/*`; no `.env.example` is checked in, so create a `.env.local` yourself):
+2. Configure environment variables (read from `lib/spotify/service.ts` and `lib/supabase/*`; copy `.env.example` to `.env.local`):
    ```
    SPOTIFY_CLIENT_ID=
    SPOTIFY_CLIENT_SECRET=
@@ -59,11 +59,11 @@ npm run test:e2e  # playwright e2e tests
 
 The app is more built-out than a typical scaffold — most core screens (search, logging, feed, ranked lists, shelves, diagnostics, profile) have real implementations with Supabase queries, loading/error states, and unit + e2e tests. That said, it is not production-ready:
 
-- **No database schema/migrations in the repo.** Code references Supabase tables (`profiles`, `logs`, `follows`, `ranked_lists`, `ranked_list_items`) and columns (e.g. `shelves`, `genre`) that must exist for any of this to work, but there is no SQL/migration file defining them anywhere in the repo — the schema is implicit and undocumented.
-- **No `.env.example`** — required environment variables have to be inferred from source.
+- **Database schema** lives in `supabase/migrations/0001_init.sql` (inferred from app queries; apply it to your Supabase project and review the RLS policies).
+- **`.env.example`** documents the required environment variables.
 - Several data paths have an "E2E test mode" branch (checking `localStorage` for `MUSICD_E2E_TEST_USER`/`MUSICD_E2E_LOGS`) alongside the real Supabase path, which is useful for tests but adds branching that should eventually be isolated from production code.
 - `components/log/album-search.tsx` has its own inline test-mode stub result, separate from the shared search flow — minor duplication.
 - Server-side Supabase client (`lib/supabase/server.ts`) falls back to the anon key if `SUPABASE_SERVICE_ROLE_KEY` isn't set, which is a workable dev fallback but should not be relied on for anything requiring elevated privileges.
-- No CI configuration was found in the repo (no `.github/workflows`), so lint/test/build are not automatically enforced.
+- CI (`.github/workflows/ci.yml`) runs lint, unit tests, and build.
 
-In short: the frontend and API-route logic for the core features are implemented, but the project is missing the database schema and environment documentation needed to actually stand it up from a fresh clone.
+In short: core features are implemented; remaining work is isolating E2E-mode branches and validating the schema against a live Supabase project.
