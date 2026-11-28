@@ -63,6 +63,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6">
       <ProfileHeader
+        profileId={profile.id}
         username={profile.username}
         totalLogs={stats.totalLogs}
         averageRating={stats.averageRating}
